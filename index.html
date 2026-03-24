@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>健康记录</title>
+<style>
+:root{--bg:#F5F9F4;--card:#FFF;--text:#2C3E2C;--sub:#7D8F7D;--hint:#A8B8A8;--bdr:#D8E8D4;--acc:#4A8C5C;--accL:#DCF0E0;--bp:#C2785C;--bpL:#F3E4DB;--leg:#7A86B6;--legL:#E2E5F0;--dng:#D4574E;--dngL:#FCEAE9;--wrn:#C9963A;--wrnL:#FDF3E0;--ok:#4A8C5C;--okL:#DCF0E0;--r:14px;--sh:0 2px 12px rgba(0,0,0,0.06)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{font-size:16px;overflow-x:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+input,select{font-family:inherit;font-size:16px;color:var(--text)}
+.hdr{background:linear-gradient(135deg,#4A8C5C,#68A87A);padding:18px 16px 12px;color:#fff;position:sticky;top:0;z-index:50;box-shadow:0 4px 20px rgba(74,140,92,0.3)}
+.hdr h1{font-size:1.1rem;font-weight:700;letter-spacing:1px}
+.hdr p{font-size:.7rem;opacity:.85;margin-top:2px}
+.tabs{display:flex;background:var(--card);box-shadow:var(--sh);position:sticky;top:52px;z-index:40}
+.tab{flex:1;padding:10px 4px;font-size:.8rem;font-weight:600;color:var(--sub);text-align:center;border-bottom:3px solid transparent;transition:.2s}
+.tab.on{color:var(--acc);border-bottom-color:var(--acc);background:var(--accL)}
+.ct{max-width:480px;margin:0 auto;padding:0 14px 80px;overflow-x:hidden}
+.card{background:var(--card);border-radius:var(--r);padding:16px;margin-top:12px;box-shadow:var(--sh);overflow:hidden}
+.card-t{font-size:.95rem;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.wcal{background:var(--card);border-radius:var(--r);padding:10px 12px;margin-top:10px;box-shadow:var(--sh)}
+.wcal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.wcal-hd span{font-size:.8rem;font-weight:700}
+.wcal-hd button{width:28px;height:28px;border-radius:50%;background:var(--bg);font-size:.85rem;display:flex;align-items:center;justify-content:center;color:var(--sub)}
+.wcal-row{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;gap:2px}
+.wcal-lbl{font-size:.6rem;color:var(--hint);padding:1px 0}
+.wd{position:relative;padding:7px 0;font-size:.78rem;color:var(--sub);border-radius:8px;cursor:pointer}
+.wd.today{font-weight:700;color:var(--text)}.wd.sel{background:var(--acc);color:#fff;font-weight:700}
+.wd.has::after{content:'';position:absolute;bottom:1px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--acc)}
+.wd.sel.has::after{background:rgba(255,255,255,.7)}.wd.other{opacity:.35}
+.expand-btn{display:block;margin:4px auto 0;font-size:.65rem;color:var(--hint);padding:2px 10px}
+.mcal{background:var(--card);border-radius:var(--r);padding:10px 12px;margin-top:10px;box-shadow:var(--sh)}
+.mcal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.mcal-hd span{font-size:.8rem;font-weight:700}
+.mcal-hd button{width:28px;height:28px;border-radius:50%;background:var(--bg);font-size:.85rem;display:flex;align-items:center;justify-content:center;color:var(--sub)}
+.mcal-row{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;gap:2px}
+.mcal-lbl{font-size:.6rem;color:var(--hint);padding:1px 0}
+.md{position:relative;padding:5px 0;font-size:.72rem;color:var(--sub);border-radius:6px;cursor:pointer}
+.md.today{font-weight:700;color:var(--text)}.md.sel{background:var(--acc);color:#fff;font-weight:700}
+.md.has::after{content:'';position:absolute;bottom:1px;left:50%;transform:translateX(-50%);width:3px;height:3px;border-radius:50%;background:var(--acc)}
+.md.sel.has::after{background:rgba(255,255,255,.7)}.md.other{opacity:.3}
+.fr{display:flex;gap:6px;margin-bottom:14px;overflow:hidden}
+.fr-dt{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.fg{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.fg label{font-size:.78rem;color:var(--sub);margin-bottom:5px;font-weight:600}
+.fg input,.fg select{padding:11px 10px;border:1.5px solid var(--bdr);border-radius:10px;background:#FAFFF9;outline:none;font-size:16px;width:100%;min-width:0;max-width:100%;box-sizing:border-box}
+.fg input:focus,.fg select:focus{border-color:var(--acc)}
+.dose-wrap{display:flex;align-items:center;min-width:0;overflow:hidden;width:100%}
+.dose-wrap input{border-radius:10px 0 0 10px;flex:1;min-width:0}
+.dose-wrap span{padding:11px 10px;background:var(--bdr);border-radius:0 10px 10px 0;font-size:.85rem;color:var(--sub);font-weight:600;white-space:nowrap}
+.ac-wrap{position:relative}
+.ac-list{position:absolute;top:100%;left:0;right:0;background:var(--card);border:1.5px solid var(--bdr);border-top:none;border-radius:0 0 10px 10px;z-index:5;max-height:120px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+.ac-item{padding:11px 13px;font-size:.9rem;border-bottom:1px solid var(--bdr);cursor:pointer}
+.ac-item:last-child{border-bottom:none}.ac-item:active{background:var(--accL)}
+.btn-p{width:100%;padding:16px;background:linear-gradient(135deg,#4A8C5C,#68A87A);color:#fff;font-weight:700;font-size:1rem;border-radius:14px;box-shadow:0 4px 14px rgba(74,140,92,0.3);letter-spacing:1px;margin-top:6px}
+.btn-p:active{transform:scale(.97)}
+.btn-o{padding:12px 16px;border:1.5px solid var(--bdr);border-radius:10px;font-size:.8rem;font-weight:600;color:var(--sub)}
+.btn-o:active{background:var(--bg)}
+.tag{display:inline-flex;align-items:center;padding:5px 10px;border-radius:8px;font-size:.85rem;font-weight:600;white-space:nowrap}
+.t-bp{background:var(--bpL);color:var(--bp)}.t-acc{background:var(--accL);color:var(--acc)}.t-leg{background:var(--legL);color:var(--leg)}.t-dng{background:var(--dngL);color:var(--dng)}.t-wrn{background:var(--wrnL);color:var(--wrn)}.t-ok{background:var(--okL);color:var(--ok)}
+.rec{padding:14px 0;border-bottom:1px solid var(--bdr);animation:si .2s}
+.rec:last-child{border-bottom:none}
+.rec-v{display:flex;gap:6px;flex-wrap:wrap;align-items:center;overflow:hidden}
+.rec-n{font-size:.8rem;color:var(--sub);margin-top:5px;line-height:1.5}
+.rec-acts{display:flex;gap:8px;margin-top:8px}
+.rec-btn{padding:8px 16px;border-radius:8px;font-size:.78rem;font-weight:600}
+.rec-btn.edit{background:var(--accL);color:var(--acc)}
+.rec-btn.edit:active{background:var(--bdr)}
+.rec-btn.del{background:var(--dngL);color:var(--dng)}
+.rec-btn.del:active{opacity:.7}
+.tl{border-left:2.5px solid var(--bdr);margin-left:6px;padding-left:16px;overflow:hidden}
+.tl-item{position:relative;padding-bottom:16px}
+.tl-item:last-child{padding-bottom:0}
+.tl-dot{position:absolute;left:-23px;top:4px;width:9px;height:9px;border-radius:50%}
+.tl-time{font-size:.82rem;font-weight:600;margin-bottom:4px}
+.bp-val{font-size:1.15rem;font-weight:700}
+.empty{text-align:center;padding:30px 16px;color:var(--sub)}
+.empty-i{font-size:2.2rem;margin-bottom:8px}
+.empty-t{font-size:.85rem;line-height:1.6}
+.cht{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;margin:8px 0}
+.cht svg{display:block}
+.cht-tap{cursor:pointer}
+/* Toggle */
+.tgl-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;margin-bottom:10px}
+.tgl-label{font-size:.85rem;font-weight:600}
+.tgl{width:50px;height:30px;background:var(--bdr);border-radius:15px;position:relative;cursor:pointer;transition:.2s}
+.tgl.on{background:var(--acc)}
+.tgl::after{content:'';width:24px;height:24px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:.2s;box-shadow:0 1px 4px rgba(0,0,0,0.15)}
+.tgl.on::after{transform:translateX(20px)}
+/* Leg overview */
+.leg-ov{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-bottom:8px}
+.leg-ov-item{padding:10px;border-radius:10px;text-align:center;overflow:hidden}
+.leg-ov-item .ov-pos{font-size:.72rem;color:var(--sub);margin-bottom:4px}
+.leg-ov-item .ov-val{font-size:1rem;font-weight:700}
+.leg-ov-item .ov-lr{font-size:.72rem;margin-top:2px}
+/* Leg section header in form */
+.leg-sec{font-size:.85rem;font-weight:700;color:var(--leg);margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--bdr)}
+.leg-tbl{width:100%;border-collapse:collapse;font-size:.82rem;margin-top:6px;table-layout:fixed}
+.leg-tbl td{padding:6px 4px;white-space:nowrap}
+.leg-tbl td:first-child{color:var(--leg);font-weight:600;width:70px}
+.leg-tbl .l-val{color:var(--bp)}
+.leg-tbl .r-val{color:var(--leg)}
+.leg-tbl .d-val{font-weight:600}
+.pos-tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.pos-tab{padding:7px 14px;border-radius:8px;font-size:.78rem;font-weight:600;background:var(--bg);color:var(--sub)}
+.pos-tab.on{background:var(--legL);color:var(--leg)}
+/* Full screen */
+.fs-page{position:fixed;inset:0;background:var(--bg);z-index:100;overflow-y:auto;overflow-x:hidden;padding:0 16px 40px;max-width:100vw}
+.fs-page-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 0;position:sticky;top:0;background:var(--bg);z-index:2}
+.fs-page-hd h2{font-size:1.05rem;font-weight:700}
+.fs-page-hd button{font-size:.85rem;color:var(--sub);padding:6px 12px}
+.fs-bg{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:120;display:flex;align-items:center;justify-content:center;padding:12px;cursor:pointer}
+.fs-chart{background:var(--card);border-radius:12px;padding:16px;max-height:90vh;overflow:auto;-webkit-overflow-scrolling:touch;width:100%;max-width:500px}
+.fs-chart svg{display:block}
+.confirm-bg{position:fixed;inset:0;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;z-index:130;padding:20px}
+.confirm-box{background:var(--card);border-radius:var(--r);padding:24px;max-width:300px;width:100%;text-align:center}
+.confirm-box p{font-size:.9rem;margin-bottom:16px;line-height:1.6;white-space:pre-line}
+.confirm-btns{display:flex;gap:10px}
+.confirm-btns button{flex:1;padding:13px;border-radius:10px;font-weight:600;font-size:.9rem}
+@keyframes si{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes sk{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+var SK='health_v3',D,tab='bp',selDate,calYear,calMonth,calExpand=false,modal=null,editRec=null,confirm_=null,fullChartSvg=null,legChartPos='膝上10cm',fullChartScrollTo=null;
+var LEG_POS=['膝上10cm','膝下10cm','脚腕','大腿根'];
+var LEG_WARN={'膝上10cm':3,'膝下10cm':4.5,'脚腕':1.5,'大腿根':3};
+function load(){try{var d=localStorage.getItem(SK);return d?JSON.parse(d):{bp:[],med:[],leg:[]};}catch(e){return{bp:[],med:[],leg:[]};}}
+function save(){localStorage.setItem(SK,JSON.stringify(D));}
+D=load();
+function P(n){return String(n).padStart(2,'0');}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function esc(s){return s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):''}
+function now24(){var d=new Date();return P(d.getHours())+':'+P(d.getMinutes());}
+function todayStr(){var d=new Date();return d.getFullYear()+'-'+P(d.getMonth()+1)+'-'+P(d.getDate());}
+function fmtD(y,m,d){return y+'-'+P(m)+'-'+P(d);}
+var td=new Date();selDate=todayStr();calYear=td.getFullYear();calMonth=td.getMonth();
+function bpGrade(s,d){if(s>=160||d>=100)return{l:'重度偏高',c:'t-dng'};if(s>=140||d>=90)return{l:'高血压',c:'t-dng'};if(s>=130||d>=80)return{l:'偏高',c:'t-wrn'};if(s<90||d<60)return{l:'偏低',c:'t-wrn'};return{l:'正常',c:'t-ok'};}
+function hrGrade(h){if(!h)return null;if(h<55)return{l:'偏慢',c:'t-wrn'};if(h>100)return{l:'偏快',c:'t-wrn'};return{l:'正常',c:'t-ok'};}
+function recsOn(a,d){return a.filter(function(r){return r.date===d;});}
+function lastBPMed(date,time){var ms=recsOn(D.med,date).filter(function(m){return m.cat==='bp'&&m.time<=time;});if(!ms.length)return null;ms.sort(function(a,b){return a.time>b.time?-1:1;});return ms[0];}
+function tdm(t1,t2){var a=t1.split(':'),b=t2.split(':');return(+b[0]*60+ +b[1])-(+a[0]*60+ +a[1]);}
+function fmtDf(m){if(m<60)return m+'分钟';var h=Math.floor(m/60),r=m%60;return r?h+'小时'+r+'分钟':h+'小时';}
+function dwr(type,y,m){var s=new Set();D[type].forEach(function(r){var p=r.date.split('-');if(+p[0]===y&&+p[1]===m+1)s.add(+p[2]);});if(type==='bp'){D.med.filter(function(mm){return mm.cat==='bp';}).forEach(function(r){var p=r.date.split('-');if(+p[0]===y&&+p[1]===m+1)s.add(+p[2]);});}return s;}
+function weekOf(ds){var d=new Date(ds),day=(d.getDay()+6)%7,mon=new Date(d);mon.setDate(d.getDate()-day);var days=[];for(var i=0;i<7;i++){var dd=new Date(mon);dd.setDate(mon.getDate()+i);days.push({y:dd.getFullYear(),m:dd.getMonth()+1,d:dd.getDate(),str:fmtD(dd.getFullYear(),dd.getMonth()+1,dd.getDate())});}return days;}
+
+function R(){
+  if(modal){var fh=rFormPage();if(confirm_)fh+=rConfirm();document.getElementById('app').innerHTML=fh;bindForm();
+    var cbg2=q('cbg');if(cbg2)cbg2.onclick=function(e){if(e.target===cbg2){confirm_=null;R();}};
+    var cno2=q('c-no');if(cno2)cno2.onclick=function(){confirm_=null;R();};
+    var cyes2=q('c-yes');if(cyes2)cyes2.onclick=function(){if(confirm_&&confirm_.fn)confirm_.fn();};
+    return;}
+  var h='<div class="hdr"><div style="max-width:480px;margin:0 auto"><h1>👩 健康记录</h1><p>'+todayStr()+'</p></div></div>';
+  h+='<div class="tabs">';[{id:'bp',n:'血压'},{id:'med',n:'用药'},{id:'leg',n:'腿围'},{id:'set',n:'管理'}].forEach(function(t){h+='<button class="tab'+(tab===t.id?' on':'')+'" data-t="'+t.id+'">'+t.n+'</button>';});
+  h+='</div><div class="ct">';
+  if(tab==='bp')h+=rBP();else if(tab==='med')h+=rMed();else if(tab==='leg')h+=rLeg();else h+=rSet();
+  h+='</div>';
+  if(confirm_)h+=rConfirm();
+  if(fullChartSvg)h+='<div class="fs-bg" id="fsbg"><div class="fs-chart" id="fschart"><div class="cht" style="overflow-x:auto">'+fullChartSvg+'</div><button id="fs-close" style="width:100%;padding:14px;margin-top:12px;border-radius:10px;background:var(--bg);color:var(--sub);font-size:.85rem;font-weight:600">关闭</button></div></div>';
+  document.getElementById('app').innerHTML=h;bindAll();
+}
+
+// ═══ FORM PAGE ═══
+function rFormPage(){
+  var isEdit=!!editRec;
+  var h='<div class="fs-page"><div style="max-width:480px;margin:0 auto"><div class="fs-page-hd"><button id="form-back">取消</button><h2>'+(isEdit?'编辑':'记录')+(modal==='bp'?'血压':modal==='med'?'用药':'腿围')+'</h2><div style="width:48px"></div></div>';
+  if(modal==='bp'){
+    var r=editRec||{date:selDate,time:now24(),sys:'',dia:'',hr:'',note:''};
+    h+='<div class="fr-dt"><div class="fg"><label>日期</label><input type="date" id="m-date" value="'+r.date+'"></div><div class="fg"><label>时间</label><input type="time" id="m-time" value="'+r.time+'"></div></div>';
+    h+='<div class="fr"><div class="fg"><label>收缩压（高压）</label><input type="number" id="m-sys" value="'+(r.sys||'')+'" placeholder="如 135" inputmode="numeric"></div><div class="fg"><label>舒张压（低压）</label><input type="number" id="m-dia" value="'+(r.dia||'')+'" placeholder="如 85" inputmode="numeric"></div></div>';
+    h+='<div class="fr"><div class="fg"><label>心率（可选）</label><input type="number" id="m-hr" value="'+(r.hr||'')+'" placeholder="如 72" inputmode="numeric"></div><div class="fg"><label>备注（可选）</label><input type="text" id="m-note" value="'+esc(r.note||'')+'" placeholder="如 早饭前"></div></div>';
+    h+='<button class="btn-p" id="m-save">保存</button>';
+  }else if(modal==='med'){
+    var r=editRec||{date:selDate,time:now24(),name:'',dose:'',cat:'bp',note:''};
+    h+='<div class="fr-dt"><div class="fg"><label>日期</label><input type="date" id="m-date" value="'+r.date+'"></div><div class="fg"><label>时间</label><input type="time" id="m-time" value="'+r.time+'"></div></div>';
+    h+='<div class="fr"><div class="fg"><label>药名</label><div class="ac-wrap"><input type="text" id="m-name" value="'+esc(r.name||'')+'" placeholder="如 氨氯地平" autocomplete="off"><div id="ac-drop" class="ac-list" style="display:none"></div></div></div><div class="fg"><label>剂量</label><div class="dose-wrap"><input type="number" id="m-dose" value="'+(r.dose||'')+'" placeholder="如 5" inputmode="decimal"><span>mg</span></div></div></div>';
+    h+='<div class="fr"><div class="fg"><label>类别</label><select id="m-cat"><option value="bp"'+(r.cat==='bp'?' selected':'')+'>降压药</option><option value="other"'+(r.cat==='other'?' selected':'')+'>其他药物</option></select></div><div class="fg"><label>备注（可选）</label><input type="text" id="m-mnote" value="'+esc(r.note||'')+'" placeholder="如 饭后服用"></div></div>';
+    h+='<button class="btn-p" id="m-save">保存</button>';
+  }else if(modal==='leg'){
+    var r=editRec||{date:selDate,time:now24(),stocking:false,pts:{},note:''};
+    h+='<div class="fr-dt"><div class="fg"><label>日期</label><input type="date" id="m-date" value="'+r.date+'"></div><div class="fg"><label>时间</label><input type="time" id="m-time" value="'+r.time+'"></div></div>';
+    h+='<div class="tgl-row"><span class="tgl-label">穿弹力袜</span><div class="tgl'+(r.stocking?' on':'')+'" id="m-stk"></div></div>';
+    LEG_POS.forEach(function(pos){
+      var pt=r.pts&&r.pts[pos]?r.pts[pos]:{l:'',r:''};
+      h+='<div class="leg-sec">'+pos+'</div>';
+      h+='<div class="fr"><div class="fg"><label>左腿（cm）</label><input type="number" id="m-l-'+pos+'" value="'+(pt.l||'')+'" placeholder="左腿" inputmode="decimal" step="0.1"></div><div class="fg"><label>右腿（cm）</label><input type="number" id="m-r-'+pos+'" value="'+(pt.r||'')+'" placeholder="右腿" inputmode="decimal" step="0.1"></div></div>';
+    });
+    h+='<div class="fr"><div class="fg"><label>备注（可选）</label><input type="text" id="m-lnote" value="'+esc(r.note||'')+'" placeholder="如 早上量的"></div></div>';
+    h+='<button class="btn-p" id="m-save" style="background:linear-gradient(135deg,#6878A6,#8A96C6)">保存</button>';
+  }
+  h+='</div></div>';return h;
+}
+
+function bindForm(){
+  var q=function(id){return document.getElementById(id);};
+  q('form-back').onclick=function(){modal=null;editRec=null;R();};
+  // Stocking toggle
+  var stk=q('m-stk');
+  if(stk)stk.onclick=function(){stk.classList.toggle('on');};
+  // Autocomplete
+  var nameInp=q('m-name'),acDrop=q('ac-drop');
+  if(nameInp&&acDrop){
+    var allN=[];var ns={};D.med.forEach(function(m){ns[m.name]=1;});allN=Object.keys(ns);
+    nameInp.onfocus=nameInp.oninput=function(){
+      var v=nameInp.value.trim().toLowerCase();
+      var ms=v?allN.filter(function(n){return n.toLowerCase().indexOf(v)>=0;}):allN;
+      if(!ms.length){acDrop.style.display='none';return;}
+      acDrop.innerHTML=ms.map(function(n){return'<div class="ac-item" data-acv="'+esc(n)+'">'+esc(n)+'</div>';}).join('');
+      acDrop.style.display='block';
+      acDrop.querySelectorAll('.ac-item').forEach(function(el){el.onclick=function(){nameInp.value=el.dataset.acv;acDrop.style.display='none';};});
+    };
+    document.addEventListener('click',function(e){if(nameInp&&!nameInp.contains(e.target)&&acDrop&&!acDrop.contains(e.target))acDrop.style.display='none';});
+  }
+  // Save
+  q('m-save').onclick=function(){
+    if(modal==='bp'){
+      var sys=parseInt(q('m-sys').value),dia=parseInt(q('m-dia').value);if(!sys||!dia){shake(q('m-save'));return;}
+      var obj={id:editRec?editRec.id:uid(),date:q('m-date').value,time:q('m-time').value,sys:sys,dia:dia,hr:parseInt(q('m-hr').value)||null,note:q('m-note').value.trim()};
+      if(editRec){var idx=D.bp.findIndex(function(r){return r.id===editRec.id;});if(idx>=0)D.bp[idx]=obj;}else D.bp.push(obj);selDate=obj.date;
+    }else if(modal==='med'){
+      var nm=q('m-name').value.trim();if(!nm){shake(q('m-save'));return;}
+      var obj={id:editRec?editRec.id:uid(),date:q('m-date').value,time:q('m-time').value,name:nm,dose:q('m-dose').value.trim(),cat:q('m-cat').value,note:q('m-mnote').value.trim()};
+      if(editRec){var idx=D.med.findIndex(function(r){return r.id===editRec.id;});if(idx>=0)D.med[idx]=obj;}else D.med.push(obj);selDate=obj.date;
+    }else if(modal==='leg'){
+      var pts={},hasAny=false;
+      LEG_POS.forEach(function(pos){
+        var l=parseFloat(q('m-l-'+pos).value),r=parseFloat(q('m-r-'+pos).value);
+        if(l||r){pts[pos]={l:l||null,r:r||null};hasAny=true;}
+      });
+      if(!hasAny){shake(q('m-save'));return;}
+      var stk=q('m-stk');
+      var dateVal=q('m-date').value;
+      var obj={id:editRec?editRec.id:uid(),date:dateVal,time:q('m-time').value,stocking:stk?stk.classList.contains('on'):false,pts:pts,note:q('m-lnote').value.trim()};
+      if(editRec){var idx=D.leg.findIndex(function(r){return r.id===editRec.id;});if(idx>=0)D.leg[idx]=obj;}else D.leg.push(obj);selDate=obj.date;
+    }
+    save();modal=null;editRec=null;R();
+  };
+}
+
+// ═══ CALENDARS ═══
+function rWCal(type){var wk=weekOf(selDate),todayS=todayStr(),sp=selDate.split('-'),hasDates=dwr(type,+sp[0],+sp[1]-1),lbls=['一','二','三','四','五','六','日'],mN=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];var h='<div class="wcal"><div class="wcal-hd"><button data-wk="prev">&lt;</button><span>'+sp[0]+'年'+mN[+sp[1]-1]+'</span><button data-wk="next">&gt;</button></div><div class="wcal-row">';lbls.forEach(function(l){h+='<span class="wcal-lbl">'+l+'</span>';});h+='</div><div class="wcal-row">';wk.forEach(function(d){var cls='wd';if(d.str===todayS)cls+=' today';if(d.str===selDate)cls+=' sel';if(hasDates.has(d.d)&&+sp[1]===d.m)cls+=' has';if(d.m!==+sp[1])cls+=' other';h+='<div class="'+cls+'" data-date="'+d.str+'">'+d.d+'</div>';});h+='</div><button class="expand-btn" data-expand="1">'+(calExpand?'收起 ▲':'展开月历 ▼')+'</button></div>';if(calExpand)h+=rMCal(type);return h;}
+function rMCal(type){var sp=selDate.split('-'),cy=+sp[0],cm=+sp[1]-1,first=new Date(cy,cm,1),dow=(first.getDay()+6)%7,dim=new Date(cy,cm+1,0).getDate(),mN=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'],hasDates=dwr(type,cy,cm),todayD=new Date(),isThis=cy===todayD.getFullYear()&&cm===todayD.getMonth();var h='<div class="mcal"><div class="mcal-hd"><button data-cm="prev">&lt;</button><span>'+cy+'年'+mN[cm]+'</span><button data-cm="next">&gt;</button></div><div class="mcal-row"><span class="mcal-lbl">一</span><span class="mcal-lbl">二</span><span class="mcal-lbl">三</span><span class="mcal-lbl">四</span><span class="mcal-lbl">五</span><span class="mcal-lbl">六</span><span class="mcal-lbl">日</span></div><div class="mcal-row">';for(var i=0;i<dow;i++)h+='<div class="md other"></div>';for(var d=1;d<=dim;d++){var ds=fmtD(cy,cm+1,d),cls='md';if(isThis&&d===todayD.getDate())cls+=' today';if(d===+sp[2])cls+=' sel';if(hasDates.has(d))cls+=' has';h+='<div class="'+cls+'" data-date="'+ds+'">'+d+'</div>';}h+='</div></div>';return h;}
+
+// ═══ BP ═══
+function rBP(){
+  var h=rWCal('bp');
+  var dayBP=recsOn(D.bp,selDate).sort(function(a,b){return a.time<b.time?-1:1;}),dayMed=recsOn(D.med,selDate).filter(function(m){return m.cat==='bp';}).sort(function(a,b){return a.time<b.time?-1:1;});
+  var tl=[];dayBP.forEach(function(r){tl.push({type:'bp',time:r.time,data:r});});dayMed.forEach(function(r){tl.push({type:'med',time:r.time,data:r});});tl.sort(function(a,b){return a.time<b.time?-1:1;});
+  h+='<div class="card"><div class="card-t"><span class="dot" style="background:var(--bp)"></span>'+selDate.slice(5)+' 记录</div>';
+  if(!tl.length)h+='<div class="empty"><div class="empty-i">📋</div><div class="empty-t">这天还没有记录</div></div>';
+  else{h+='<div class="tl">';tl.forEach(function(item){h+='<div class="tl-item">';if(item.type==='med'){h+='<div class="tl-dot" style="background:var(--acc)"></div><div class="tl-time" style="color:var(--acc)">'+item.time+' 服药</div><div class="rec-v"><span class="tag t-acc">'+esc(item.data.name)+'</span>';if(item.data.dose)h+='<span class="tag t-acc">'+esc(item.data.dose)+'mg</span>';h+='</div><div class="rec-acts"><button class="rec-btn edit" data-edit="med" data-id="'+item.data.id+'">编辑</button><button class="rec-btn del" data-del="med" data-id="'+item.data.id+'">删除</button></div>';}else{var g=bpGrade(item.data.sys,item.data.dia),hg=hrGrade(item.data.hr),med=lastBPMed(selDate,item.time),label=item.time+' 血压';if(med){var diff=tdm(med.time,item.time);if(diff>=0)label+='（服药后'+fmtDf(diff)+'）';}h+='<div class="tl-dot" style="background:var(--bp)"></div><div class="tl-time" style="color:var(--bp)">'+label+'</div><div class="rec-v"><span class="tag t-bp"><span class="bp-val">'+item.data.sys+'/'+item.data.dia+'</span></span><span class="tag '+g.c+'">'+g.l+'</span>';if(item.data.hr){h+='<span class="tag t-leg">心率 '+item.data.hr+'</span>';if(hg)h+='<span class="tag '+hg.c+'">'+hg.l+'</span>';}h+='</div>';if(item.data.note)h+='<div class="rec-n">'+esc(item.data.note)+'</div>';h+='<div class="rec-acts"><button class="rec-btn edit" data-edit="bp" data-id="'+item.data.id+'">编辑</button><button class="rec-btn del" data-del="bp" data-id="'+item.data.id+'">删除</button></div>';}h+='</div>';});h+='</div>';}
+  h+='</div>';
+  var sp=selDate.split('-'),md=bpMonthData(+sp[0],+sp[1]);
+  if(md.length>=1)h+='<div class="card"><div class="card-t"><span class="dot" style="background:var(--bp)"></span>'+sp[1]+'月每日血压</div><div class="cht cht-tap" data-cht="lollipop">'+mkLollipop(md,false)+'</div></div>';
+  var monthBP=D.bp.filter(function(r){var p=r.date.split('-');return+p[0]===+sp[0]&&+p[1]===+sp[1];}).sort(function(a,b){return(a.date+a.time)<(b.date+b.time)?-1:1;});
+  if(monthBP.length>=3)h+='<div class="card"><div class="card-t"><span class="dot" style="background:var(--bp)"></span>'+sp[1]+'月血压趋势（'+monthBP.length+'次）</div><div class="cht cht-tap" data-cht="bpline">'+mkBPLine(monthBP,false)+'</div></div>';
+  h+='<div style="margin-top:12px"><button class="btn-p" data-modal="bp">+ 记录血压</button></div>';return h;
+}
+function bpMonthData(y,m){var recs=D.bp.filter(function(r){var p=r.date.split('-');return+p[0]===y&&+p[1]===m;});var byDay={};recs.forEach(function(r){var d=+r.date.split('-')[2];if(!byDay[d])byDay[d]={day:d,sA:[],dA:[]};byDay[d].sA.push(r.sys);byDay[d].dA.push(r.dia);});var medDays={};D.med.filter(function(mm){return mm.cat==='bp';}).forEach(function(r){var p=r.date.split('-');if(+p[0]===y&&+p[1]===m)medDays[+p[2]]=1;});var res=[];Object.keys(byDay).sort(function(a,b){return+a-+b;}).forEach(function(d){var o=byDay[d];res.push({day:o.day,sMax:Math.max.apply(null,o.sA),sMin:Math.min.apply(null,o.sA),sAvg:Math.round(o.sA.reduce(function(a,b){return a+b;},0)/o.sA.length),dMax:Math.max.apply(null,o.dA),dMin:Math.min.apply(null,o.dA),dAvg:Math.round(o.dA.reduce(function(a,b){return a+b;},0)/o.dA.length),hasMed:!!medDays[o.day]});});return res;}
+function mkLollipop(data,big){var allV=[];data.forEach(function(d){allV.push(d.sMax,d.sMin,d.dMax,d.dMin);});var mn=Math.max(40,Math.min.apply(null,allV)-8),mx=Math.min(220,Math.max.apply(null,allV)+12),rng=mx-mn||1;var bW=big?50:36,gap=big?10:6,pL=big?46:36,pT=big?28:22,pB=big?40:34,pR=big?16:12,fs=big?12:9;var W=pL+data.length*(bW+gap)+pR,H=big?340:260,ch=H-pT-pB;function yp(v){return pT+ch-((v-mn)/rng)*ch;}var gls=[];var step=10,start=Math.ceil(mn/step)*step;for(var v=start;v<=mx;v+=step)gls.push(v);var s='<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" style="min-width:'+W+'px">';gls.forEach(function(v){s+='<line x1="'+pL+'" y1="'+yp(v)+'" x2="'+(W-pR)+'" y2="'+yp(v)+'" stroke="var(--bdr)" stroke-width="0.5" stroke-dasharray="4 4"/><text x="'+(pL-4)+'" y="'+(yp(v)+4)+'" font-size="'+(big?12:10)+'" fill="var(--sub)" text-anchor="end">'+v+'</text>';});if(140>=mn&&140<=mx)s+='<line x1="'+pL+'" y1="'+yp(140)+'" x2="'+(W-pR)+'" y2="'+yp(140)+'" stroke="var(--dng)" stroke-width="0.8" opacity="0.25"/>';if(90>=mn&&90<=mx)s+='<line x1="'+pL+'" y1="'+yp(90)+'" x2="'+(W-pR)+'" y2="'+yp(90)+'" stroke="var(--dng)" stroke-width="0.8" opacity="0.25"/>';var sO=big?-10:-6,dO=big?10:6,sP=[],dP=[];data.forEach(function(d,i){var cx=pL+(bW+gap)*i+bW/2;if(d.hasMed)s+='<rect x="'+(cx-bW/2)+'" y="'+(H-pB+2)+'" width="'+bW+'" height="6" rx="3" fill="var(--acc)" opacity="0.2"/><text x="'+cx+'" y="'+(H-pB+18)+'" font-size="'+(big?9:7)+'" fill="var(--acc)" text-anchor="middle">药</text>';if(d.sMax!==d.sMin)s+='<line x1="'+(cx+sO)+'" y1="'+yp(d.sMax)+'" x2="'+(cx+sO)+'" y2="'+yp(d.sMin)+'" stroke="var(--bp)" stroke-width="'+(big?4:3)+'" stroke-linecap="round"/>';s+='<circle cx="'+(cx+sO)+'" cy="'+yp(d.sAvg)+'" r="'+(big?6:4)+'" fill="var(--bp)"/><text x="'+(cx+sO)+'" y="'+(yp(d.sMax)-(big?8:6))+'" font-size="'+fs+'" fill="var(--bp)" text-anchor="middle" font-weight="600">'+d.sMax+'</text>';if(d.sMax!==d.sMin)s+='<text x="'+(cx+sO)+'" y="'+(yp(d.sMin)+(big?16:13))+'" font-size="'+(big?11:8)+'" fill="var(--bp)" text-anchor="middle" opacity="0.6">'+d.sMin+'</text>';sP.push((cx+sO)+','+yp(d.sAvg));if(d.dMax!==d.dMin)s+='<line x1="'+(cx+dO)+'" y1="'+yp(d.dMax)+'" x2="'+(cx+dO)+'" y2="'+yp(d.dMin)+'" stroke="var(--leg)" stroke-width="'+(big?4:3)+'" stroke-linecap="round"/>';s+='<circle cx="'+(cx+dO)+'" cy="'+yp(d.dAvg)+'" r="'+(big?6:4)+'" fill="var(--leg)"/><text x="'+(cx+dO)+'" y="'+(yp(d.dMax)-(big?8:6))+'" font-size="'+fs+'" fill="var(--leg)" text-anchor="middle" font-weight="600">'+d.dMax+'</text>';if(d.dMax!==d.dMin)s+='<text x="'+(cx+dO)+'" y="'+(yp(d.dMin)+(big?16:13))+'" font-size="'+(big?11:8)+'" fill="var(--leg)" text-anchor="middle" opacity="0.6">'+d.dMin+'</text>';dP.push((cx+dO)+','+yp(d.dAvg));s+='<text x="'+cx+'" y="'+(H-pB+10)+'" font-size="'+(big?12:10)+'" fill="var(--sub)" text-anchor="middle">'+d.day+'</text>';});if(data.length>1){s+='<polyline points="'+sP.join(' ')+'" fill="none" stroke="var(--bp)" stroke-width="1" stroke-dasharray="4 3" opacity="0.4"/><polyline points="'+dP.join(' ')+'" fill="none" stroke="var(--leg)" stroke-width="1" stroke-dasharray="4 3" opacity="0.4"/>';}s+='</svg>';return s;}
+function mkBPLine(recs,big){var pL=big?46:36,pT=big?28:22,pB=big?50:36,pR=big?16:12,dG=big?52:36,fs=big?12:9;var W=pL+recs.length*dG+pR,H=big?300:220,ch=H-pT-pB;var allV=[];recs.forEach(function(r){allV.push(r.sys,r.dia);});var mn=Math.max(40,Math.min.apply(null,allV)-10),mx=Math.min(220,Math.max.apply(null,allV)+12),rng=mx-mn||1;function xp(i){return pL+i*dG+dG/2;}function yp(v){return pT+ch-((v-mn)/rng)*ch;}var gls=[60,80,90,120,130,140,160].filter(function(v){return v>=mn&&v<=mx;});var medXs={};D.med.filter(function(mm){return mm.cat==='bp';}).forEach(function(m){for(var i=0;i<recs.length;i++){if(recs[i].date===m.date&&recs[i].time>=m.time){medXs[Math.round(xp(Math.max(0,i-0.3)))]=1;break;}}});var s='<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" style="min-width:'+W+'px">';gls.forEach(function(v){s+='<line x1="'+pL+'" y1="'+yp(v)+'" x2="'+(W-pR)+'" y2="'+yp(v)+'" stroke="var(--bdr)" stroke-width="0.5" stroke-dasharray="4 4"/><text x="'+(pL-4)+'" y="'+(yp(v)+4)+'" font-size="'+(big?12:10)+'" fill="var(--sub)" text-anchor="end">'+v+'</text>';});if(140>=mn&&140<=mx)s+='<line x1="'+pL+'" y1="'+yp(140)+'" x2="'+(W-pR)+'" y2="'+yp(140)+'" stroke="var(--dng)" stroke-width="0.8" opacity="0.25"/>';if(90>=mn&&90<=mx)s+='<line x1="'+pL+'" y1="'+yp(90)+'" x2="'+(W-pR)+'" y2="'+yp(90)+'" stroke="var(--dng)" stroke-width="0.8" opacity="0.25"/>';Object.keys(medXs).forEach(function(xx){s+='<rect x="'+(parseInt(xx)-1)+'" y="'+pT+'" width="2.5" height="'+ch+'" fill="var(--acc)" opacity="0.25" rx="1"/>';});var sp=[],dp=[];recs.forEach(function(r,i){sp.push(xp(i)+','+yp(r.sys));dp.push(xp(i)+','+yp(r.dia));});s+='<polyline points="'+sp.join(' ')+'" fill="none" stroke="var(--bp)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="'+dp.join(' ')+'" fill="none" stroke="var(--leg)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>';recs.forEach(function(r,i){var cx=xp(i);s+='<circle cx="'+cx+'" cy="'+yp(r.sys)+'" r="'+(big?5:4)+'" fill="var(--bp)"/><text x="'+cx+'" y="'+(yp(r.sys)-(big?9:7))+'" font-size="'+fs+'" fill="var(--bp)" text-anchor="middle" font-weight="600">'+r.sys+'</text><circle cx="'+cx+'" cy="'+yp(r.dia)+'" r="'+(big?5:4)+'" fill="var(--leg)"/><text x="'+cx+'" y="'+(yp(r.dia)+(big?15:13))+'" font-size="'+fs+'" fill="var(--leg)" text-anchor="middle" font-weight="600">'+r.dia+'</text>';var dlbl=r.date.slice(8)+'/'+r.time;s+='<text x="'+cx+'" y="'+(H-pB+(big?16:10))+'" font-size="'+(big?10:7)+'" fill="var(--sub)" text-anchor="middle" transform="rotate(-30 '+cx+' '+(H-pB+(big?16:10))+')">'+dlbl+'</text>';});s+='</svg>';return s;}
+
+// ═══ MED ═══
+function rMed(){var h=rWCal('med');var dayRecs=recsOn(D.med,selDate).sort(function(a,b){return a.time<b.time?-1:1;});h+='<div class="card"><div class="card-t"><span class="dot" style="background:var(--acc)"></span>'+selDate.slice(5)+' 用药</div>';if(!dayRecs.length)h+='<div class="empty"><div class="empty-i">💊</div><div class="empty-t">这天还没有用药记录</div></div>';else dayRecs.forEach(function(r){h+='<div class="rec"><div class="tl-time" style="color:var(--acc)">'+r.time+'</div><div class="rec-v"><span class="tag '+(r.cat==='bp'?'t-bp':'t-acc')+'">'+esc(r.name)+'</span>';if(r.dose)h+='<span class="tag t-acc">'+esc(r.dose)+'mg</span>';h+='<span class="tag '+(r.cat==='bp'?'t-bp':'t-leg')+'">'+(r.cat==='bp'?'降压药':'其他')+'</span></div>';if(r.note)h+='<div class="rec-n">'+esc(r.note)+'</div>';h+='<div class="rec-acts"><button class="rec-btn edit" data-edit="med" data-id="'+r.id+'">编辑</button><button class="rec-btn del" data-del="med" data-id="'+r.id+'">删除</button></div></div>';});h+='</div><div style="margin-top:12px"><button class="btn-p" data-modal="med">+ 记录用药</button></div>';return h;}
+
+// ═══ LEG ═══
+function rLeg(){
+  var h=rWCal('leg');
+  var dayRecs=recsOn(D.leg,selDate).sort(function(a,b){return a.time<b.time?-1:1;});
+  // Today overview card
+  if(dayRecs.length>0){
+    var latest=dayRecs[dayRecs.length-1];
+    h+='<div class="card"><div class="card-t"><span class="dot" style="background:var(--leg)"></span>'+selDate.slice(5)+' 总览'+(latest.stocking?' · 穿弹力袜':'')+'</div>';
+    h+='<div class="leg-ov">';
+    LEG_POS.forEach(function(pos){
+      var pt=latest.pts&&latest.pts[pos];
+      if(!pt)return;
+      var df=pt.l&&pt.r?Math.abs(pt.l-pt.r).toFixed(1):null;
+      var warn=LEG_WARN[pos]||3;
+      var isW=df&&parseFloat(df)>warn;
+      h+='<div class="leg-ov-item" style="background:'+(isW?'var(--dngL)':'var(--accL)')+'">';
+      h+='<div class="ov-pos">'+pos+'</div>';
+      if(df)h+='<div class="ov-val" style="color:'+(isW?'var(--dng)':'var(--ok)')+'">差 '+df+'cm</div>';
+      h+='<div class="ov-lr" style="color:'+(isW?'var(--dng)':'var(--sub)')+'">左'+pt.l+' / 右'+pt.r+'</div>';
+      h+='</div>';
+    });
+    h+='</div></div>';
+  }
+  // Detail records
+  h+='<div class="card"><div class="card-t"><span class="dot" style="background:var(--leg)"></span>'+selDate.slice(5)+' 记录</div>';
+  if(!dayRecs.length)h+='<div class="empty"><div class="empty-i">📏</div><div class="empty-t">这天还没有测量记录</div></div>';
+  else dayRecs.forEach(function(r){
+    h+='<div class="rec"><div class="tl-time" style="color:var(--leg)">'+r.time+(r.stocking?' · 穿弹力袜':'')+'</div>';
+    h+='<table class="leg-tbl">';
+    LEG_POS.forEach(function(pos){
+      var pt=r.pts&&r.pts[pos];if(!pt)return;
+      var df=pt.l&&pt.r?Math.abs(pt.l-pt.r).toFixed(1):null;
+      var warn=LEG_WARN[pos]||3;var isW=df&&parseFloat(df)>warn;
+      h+='<tr><td>'+pos+'</td><td class="l-val">左'+pt.l+'</td><td class="r-val">右'+pt.r+'</td>';
+      if(df)h+='<td class="d-val" style="color:'+(isW?'var(--dng)':'var(--ok)')+'">差'+df+'</td>';
+      else h+='<td></td>';
+      h+='</tr>';
+    });
+    h+='</table>';
+    if(r.note)h+='<div class="rec-n">'+esc(r.note)+'</div>';
+    h+='<div class="rec-acts"><button class="rec-btn edit" data-edit="leg" data-id="'+r.id+'">编辑</button><button class="rec-btn del" data-del="leg" data-id="'+r.id+'">删除</button></div></div>';
+  });
+  h+='</div>';
+  // Chart with position tabs
+  var sp=selDate.split('-'),lm=legMD(+sp[0],+sp[1]);
+  var anyData=false;LEG_POS.forEach(function(pos){lm.forEach(function(d){if(d.diffs[pos]!==null)anyData=true;});});
+  if(anyData){
+    h+='<div class="card"><div class="card-t"><span class="dot" style="background:var(--leg)"></span>差值趋势</div>';
+    h+='<div class="pos-tabs">';
+    LEG_POS.forEach(function(pos){h+='<button class="pos-tab'+(legChartPos===pos?' on':'')+'" data-legpos="'+pos+'">'+pos+'</button>';});
+    h+='</div>';
+    var pts=[];lm.forEach(function(d){if(d.diffs[legChartPos]!==null&&d.diffs[legChartPos]!==undefined)pts.push({day:d.day,diff:d.diffs[legChartPos]});});
+    if(pts.length>=1)h+='<div class="cht cht-tap" data-cht="legdiff-'+legChartPos+'">'+mkPosDiff(pts,LEG_WARN[legChartPos]||3,false)+'</div>';
+    else h+='<div class="empty-t" style="padding:20px 0;color:var(--hint)">该位置暂无数据</div>';
+    h+='</div>';
+  }
+  h+='<div style="margin-top:12px"><button class="btn-p" id="btn-newleg" style="background:linear-gradient(135deg,#6878A6,#8A96C6)">+ 记录腿围</button></div>';return h;
+}
+
+function legMD(y,m){
+  var recs=D.leg.filter(function(r){var p=r.date.split('-');return+p[0]===y&&+p[1]===m;});
+  var byDay={};
+  recs.forEach(function(r){
+    var d=+r.date.split('-')[2];
+    if(!byDay[d])byDay[d]={day:d,records:[]};
+    byDay[d].records.push(r);
+  });
+  var res=[];
+  Object.keys(byDay).sort(function(a,b){return+a-+b;}).forEach(function(d){
+    var o=byDay[d];var latest=o.records[o.records.length-1];
+    var diffs={};
+    LEG_POS.forEach(function(pos){
+      var pt=latest.pts&&latest.pts[pos];
+      diffs[pos]=pt&&pt.l&&pt.r?Math.round(Math.abs(pt.l-pt.r)*10)/10:null;
+    });
+    res.push({day:o.day,diffs:diffs,stocking:latest.stocking});
+  });
+  return res;
+}
+
+function mkPosDiff(pts,warn,big){
+  var mx=Math.max.apply(null,pts.map(function(d){return d.diff;}))+1;if(mx<warn+1)mx=warn+1;
+  var pL=big?46:36,pT=big?20:16,pB=big?34:28,pR=big?16:12,dG=big?60:48;
+  var W=pL+pts.length*dG+pR,H=big?260:200,ch=H-pT-pB;
+  var fs=big?13:11,fsl=big?12:10;
+  function yp(v){return pT+ch-(v/mx)*ch;}
+  var wY=yp(warn);
+  var s='<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" style="min-width:'+W+'px">';
+  s+='<rect x="'+pL+'" y="'+pT+'" width="'+(W-pL-pR)+'" height="'+(wY-pT)+'" fill="var(--dng)" opacity="0.05"/>';
+  for(var v=0;v<=mx;v+=0.5){var yy=yp(v);s+='<line x1="'+pL+'" y1="'+yy+'" x2="'+(W-pR)+'" y2="'+yy+'" stroke="var(--bdr)" stroke-width="0.5" stroke-dasharray="4 4"/><text x="'+(pL-4)+'" y="'+(yy+4)+'" font-size="'+(big?11:9)+'" fill="var(--sub)" text-anchor="end">'+v.toFixed(1)+'</text>';}
+  s+='<line x1="'+pL+'" y1="'+wY+'" x2="'+(W-pR)+'" y2="'+wY+'" stroke="var(--dng)" stroke-width="1" opacity="0.5"/><text x="'+(W-pR+2)+'" y="'+(wY+3)+'" font-size="'+(big?10:8)+'" fill="var(--dng)">'+warn+'cm</text>';
+  var lp=[];pts.forEach(function(d,i){lp.push((pL+i*dG+dG/2)+','+yp(d.diff));});
+  if(lp.length>1)s+='<polyline points="'+lp.join(' ')+'" fill="none" stroke="var(--leg)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>';
+  pts.forEach(function(d,i){var cx=pL+i*dG+dG/2,cy=yp(d.diff);var color=d.diff>warn?'var(--dng)':d.diff<=warn*0.75?'var(--ok)':'var(--leg)';s+='<circle cx="'+cx+'" cy="'+cy+'" r="'+(big?7:5.5)+'" fill="'+color+'"/><text x="'+cx+'" y="'+(cy-(big?11:9))+'" font-size="'+fs+'" fill="'+color+'" text-anchor="middle" font-weight="600">'+d.diff+'</text><text x="'+cx+'" y="'+(H-pB+(big?16:14))+'" font-size="'+fsl+'" fill="var(--sub)" text-anchor="middle">'+d.day+'日</text>';});
+  s+='</svg>';return s;
+}
+
+// ═══ SETTINGS ═══
+function rSet(){var tot=D.bp.length+D.med.length+D.leg.length;var h='<div class="card"><div class="card-t"><span class="dot" style="background:var(--acc)"></span>数据统计</div><div style="display:flex;gap:8px;flex-wrap:wrap"><span class="tag t-bp">血压 '+D.bp.length+'条</span><span class="tag t-acc">用药 '+D.med.length+'条</span><span class="tag t-leg">腿围 '+D.leg.length+'条</span></div></div>';h+='<div class="card"><div class="card-t"><span class="dot" style="background:var(--acc)"></span>导出备份</div><p style="font-size:.8rem;color:var(--sub);margin-bottom:12px;line-height:1.6">导出记录，可发给医生查看</p><div style="display:flex;gap:8px"><button class="btn-o" id="x-bp" style="flex:1">血压+全部用药</button><button class="btn-o" id="x-leg" style="flex:1">腿围</button></div></div>';h+='<div class="card" style="margin-top:40px"><button id="btn-clr" style="width:100%;padding:10px;font-size:.75rem;color:var(--hint);text-align:center">清除全部数据（'+tot+'条）</button></div>';return h;}
+function rConfirm(){return '<div class="confirm-bg" id="cbg"><div class="confirm-box"><p>'+confirm_.msg+'</p><div class="confirm-btns"><button style="background:var(--bg);color:var(--sub)" id="c-no">取消</button><button style="background:var(--dng);color:#fff" id="c-yes">确定</button></div></div></div>';}
+
+// ═══ BINDALL ═══
+function q(id){return document.getElementById(id);}
+function bindAll(){
+  document.querySelectorAll('.tab').forEach(function(b){b.onclick=function(){tab=b.dataset.t;calExpand=false;R();};});
+  document.querySelectorAll('[data-wk]').forEach(function(b){b.onclick=function(){var d=new Date(selDate);d.setDate(d.getDate()+(b.dataset.wk==='prev'?-7:7));selDate=fmtD(d.getFullYear(),d.getMonth()+1,d.getDate());calYear=d.getFullYear();calMonth=d.getMonth();R();};});
+  document.querySelectorAll('[data-cm]').forEach(function(b){b.onclick=function(){var sp=selDate.split('-'),cy=+sp[0],cm=+sp[1]-1;if(b.dataset.cm==='prev'){cm--;if(cm<0){cm=11;cy--;}}else{cm++;if(cm>11){cm=0;cy++;}}selDate=fmtD(cy,cm+1,1);calYear=cy;calMonth=cm;R();};});
+  document.querySelectorAll('[data-expand]').forEach(function(b){b.onclick=function(){calExpand=!calExpand;R();};});
+  document.querySelectorAll('[data-legpos]').forEach(function(b){b.onclick=function(){legChartPos=b.dataset.legpos;R();};});
+  document.querySelectorAll('.wd[data-date],.md[data-date]').forEach(function(d){d.onclick=function(){selDate=d.dataset.date;var sp=selDate.split('-');calYear=+sp[0];calMonth=+sp[1]-1;R();};});
+  document.querySelectorAll('[data-modal]').forEach(function(b){b.onclick=function(){modal=b.dataset.modal;editRec=null;R();};});
+  var bnl=q('btn-newleg');if(bnl)bnl.onclick=function(){
+    var existing=D.leg.find(function(r){return r.date===selDate;});
+    if(existing){confirm_={msg:selDate+' 已有记录\n要重新录入吗？\n（会预填上次数据）',fn:function(){modal='leg';editRec=JSON.parse(JSON.stringify(existing));confirm_=null;R();}};R();}
+    else{modal='leg';editRec=null;R();}
+  };
+  document.querySelectorAll('[data-edit]').forEach(function(b){b.onclick=function(){var type=b.dataset.edit,id=b.dataset.id;var rec=D[type].find(function(r){return r.id===id;});if(rec){modal=type;editRec=JSON.parse(JSON.stringify(rec));R();}};});
+  document.querySelectorAll('[data-del]').forEach(function(b){b.onclick=function(){confirm_={msg:'确定删除这条记录吗？',fn:function(){D[b.dataset.del]=D[b.dataset.del].filter(function(r){return r.id!==b.dataset.id;});save();confirm_=null;R();}};R();};});
+  document.querySelectorAll('.cht-tap').forEach(function(el){el.onclick=function(){
+    var t=el.dataset.cht,sp=selDate.split('-');
+    if(t==='lollipop')fullChartSvg=mkLollipop(bpMonthData(+sp[0],+sp[1]),true);
+    else if(t==='bpline'){var mBP=D.bp.filter(function(r){var p=r.date.split('-');return+p[0]===+sp[0]&&+p[1]===+sp[1];}).sort(function(a,b){return(a.date+a.time)<(b.date+b.time)?-1:1;});fullChartSvg=mkBPLine(mBP,true);}
+    else if(t.indexOf('legdiff-')===0){var clickedPos=t.replace('legdiff-','');var lm=legMD(+sp[0],+sp[1]);var allSvg='<div style="display:flex;gap:0;scroll-snap-type:x mandatory;overflow-x:auto;-webkit-overflow-scrolling:touch">';LEG_POS.forEach(function(pos){var pts=[];lm.forEach(function(d){if(d.diffs[pos]!==null&&d.diffs[pos]!==undefined)pts.push({day:d.day,diff:d.diffs[pos]});});allSvg+='<div id="fs-leg-'+pos+'" style="min-width:100%;scroll-snap-align:start;padding:0 4px"><div style="font-size:1rem;font-weight:700;color:var(--leg);text-align:center;margin-bottom:10px">'+pos+'<span style="font-size:.75rem;color:var(--sub);margin-left:6px">警戒 '+(LEG_WARN[pos]||3)+'cm</span></div>';if(pts.length>=1)allSvg+=mkPosDiff(pts,LEG_WARN[pos]||3,true);else allSvg+='<div style="text-align:center;padding:40px 0;color:var(--hint)">暂无数据</div>';allSvg+='</div>';});allSvg+='</div><div style="text-align:center;font-size:.72rem;color:var(--hint);margin-top:8px">← 左右滑动查看其他位置 →</div>';fullChartSvg=allSvg;fullChartScrollTo=clickedPos;}
+    R();
+  };});
+  var fsbg=q('fsbg');if(fsbg){fsbg.onclick=function(e){if(e.target===fsbg){fullChartSvg=null;fullChartScrollTo=null;R();}};
+    var fsc=q('fs-close');if(fsc)fsc.onclick=function(){fullChartSvg=null;fullChartScrollTo=null;R();};
+    if(fullChartScrollTo){var el=document.getElementById('fs-leg-'+fullChartScrollTo);if(el)setTimeout(function(){el.scrollIntoView({behavior:'auto',inline:'start',block:'nearest'});},80);fullChartScrollTo=null;}
+  }
+  var cbg=q('cbg');if(cbg)cbg.onclick=function(e){if(e.target===cbg){confirm_=null;R();}};
+  var cno=q('c-no');if(cno)cno.onclick=function(){confirm_=null;R();};
+  var cyes=q('c-yes');if(cyes)cyes.onclick=function(){if(confirm_&&confirm_.fn)confirm_.fn();};
+  var xbp=q('x-bp');if(xbp)xbp.onclick=xCSV_BP;
+  var xleg=q('x-leg');if(xleg)xleg.onclick=xCSV_LEG;
+  var bclr=q('btn-clr');if(bclr)bclr.onclick=function(){confirm_={msg:'确定清除全部数据吗？\n此操作不可恢复！',fn:function(){D={bp:[],med:[],leg:[]};save();confirm_=null;R();}};R();};
+}
+function shake(el){if(!el)return;el.style.animation='none';el.offsetHeight;el.style.animation='sk .3s';}
+function dl(c,fn,t){try{var b=new Blob([c],{type:t}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=fn;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);}catch(e){prompt('长按复制：',c.slice(0,500));}}
+function xCSV_BP(){var all=[];D.bp.forEach(function(r){all.push({date:r.date,time:r.time,type:'bp',data:r});});D.med.forEach(function(r){all.push({date:r.date,time:r.time,type:'med',data:r});});all.sort(function(a,b){return(a.date+a.time)<(b.date+b.time)?-1:1;});var c='\uFEFF类型,日期,时间,收缩压,舒张压,心率,血压状态,药名,剂量(mg),药物类别,备注\n';all.forEach(function(item){if(item.type==='bp'){var r=item.data,g=bpGrade(r.sys,r.dia);c+='血压,'+r.date+','+r.time+','+r.sys+','+r.dia+','+(r.hr||'')+','+g.l+',,,,'+(r.note||'')+'\n';}else{var r=item.data;c+='用药,'+r.date+','+r.time+',,,,,"'+r.name+'",'+(r.dose||'')+','+r.cat+','+(r.note||'')+'\n';}});dl(c,'血压用药_'+todayStr()+'.csv','text/csv;charset=utf-8');}
+function xCSV_LEG(){var c='\uFEFF日期,时间,弹力袜,膝上左,膝上右,膝上差,膝下左,膝下右,膝下差,脚腕左,脚腕右,脚腕差,大腿根左,大腿根右,大腿根差,备注\n';D.leg.slice().sort(function(a,b){return(a.date+a.time)<(b.date+b.time)?-1:1;}).forEach(function(r){c+=r.date+','+r.time+','+(r.stocking?'是':'否');LEG_POS.forEach(function(pos){var pt=r.pts&&r.pts[pos];if(pt){var df=pt.l&&pt.r?Math.abs(pt.l-pt.r).toFixed(1):'';c+=','+(pt.l||'')+','+(pt.r||'')+','+df;}else c+=',,,';});c+=','+(r.note||'')+'\n';});dl(c,'腿围_'+todayStr()+'.csv','text/csv;charset=utf-8');}
+R();
+</script>
+</body>
+</html>
